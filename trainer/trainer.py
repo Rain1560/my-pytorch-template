@@ -5,13 +5,14 @@ from base import BaseTrainer
 from utils import inf_loop, MetricTracker
 
 
+
 class Trainer(BaseTrainer):
     """
     Trainer class
     """
     def __init__(self, model, criterion, metric_ftns, optimizer, config, device,
-                 data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None):
-        super().__init__(model, criterion, metric_ftns, optimizer, config)
+                 data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None,debug=False):
+        super().__init__(model, criterion, metric_ftns, optimizer, config,config.debug)
         self.config = config
         self.device = device
         self.data_loader = data_loader
@@ -27,8 +28,12 @@ class Trainer(BaseTrainer):
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
 
-        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
-        self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+        if hasattr(self,"writer"):
+            self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+            self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+        else:
+            self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns])
+            self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns])
 
     def _train_epoch(self, epoch):
         """
