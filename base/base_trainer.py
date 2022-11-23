@@ -8,9 +8,9 @@ class BaseTrainer:
     """
     Base class for all trainers
     """
-    def __init__(self, model, criterion, metric_ftns, optimizer, config):
+    def __init__(self, model, criterion, metric_ftns, optimizer, config,debug=False):
         self.config = config
-        self.logger = config.get_logger('trainer', config['trainer']['verbosity'])
+        self.debug=debug
 
         self.model = model
         self.criterion = criterion
@@ -36,11 +36,12 @@ class BaseTrainer:
                 self.early_stop = inf
 
         self.start_epoch = 1
+        if not self.debug:
+            self.logger = config.get_logger('trainer', config['trainer']['verbosity'])
+            self.checkpoint_dir = config.save_dir
 
-        self.checkpoint_dir = config.save_dir
-
-        # setup visualization writer instance                
-        self.writer = TensorboardWriter(config.log_dir, self.logger, cfg_trainer['tensorboard'])
+            # setup visualization writer instance                
+            self.writer = TensorboardWriter(config.log_dir, self.logger, cfg_trainer['tensorboard'])
 
         if config.resume is not None:
             self._resume_checkpoint(config.resume)
@@ -95,7 +96,7 @@ class BaseTrainer:
                                      "Training stops.".format(self.early_stop))
                     break
 
-            if epoch % self.save_period == 0:
+            if epoch % self.save_period == 0 and not self.debug:
                 self._save_checkpoint(epoch, save_best=best)
 
     def _save_checkpoint(self, epoch, save_best=False):

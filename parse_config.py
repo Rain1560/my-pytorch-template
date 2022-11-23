@@ -90,7 +90,7 @@ class ConfigParser:
         """
         module_name = self[name]['type']
         module_args = self[name].get('args')
-        if not module_args:
+        if not module_args and hasattr(settings,'kwargs_'+name):
             return getattr(settings,'kwargs_'+name) 
         else:
             module_args=dict(module_args)       
