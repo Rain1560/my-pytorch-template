@@ -4,7 +4,7 @@
 
     "arch": {
         "type": "MnistModel",
-        "args": {}
+        "args": {"num_classes":10}
     },
     "data_loader": {
         "type": "MnistDataLoader",

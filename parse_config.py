@@ -6,7 +6,7 @@ from functools import reduce, partial
 from operator import getitem
 from datetime import datetime
 from logger import setup_logging
-from utils import read_json, write_json
+from utils import read_json, write_json,OrderedDict
 
 
 class ConfigParser:
@@ -21,6 +21,8 @@ class ConfigParser:
         """
         # load config file and apply modification
         self._config = _update_config(config, modification)
+        _update_config_from_setting(self._config,settings)
+
         self.resume = resume
         self.debug=debug
         
@@ -90,12 +92,8 @@ class ConfigParser:
         """
         module_name = self[name]['type']
         module_args = self[name].get('args')
-        if not module_args and hasattr(settings,'kwargs_'+name):
-            return getattr(settings,'kwargs_'+name) 
-        else:
-            module_args=dict(module_args)       
+       
         assert all([k not in module_args for k in kwargs]), 'Overwriting kwargs given in config file is not allowed'
-        module_args.update(kwargs)
         return getattr(module, module_name)(*args, **module_args)
 
     def init_ftn(self, name, module, *args, **kwargs):
@@ -147,6 +145,12 @@ def _update_config(config, modification):
         if v is not None:
             _set_by_path(config, k, v)
     return config
+
+def _update_config_from_setting(config,settings):
+    for k,v in config.items():
+        if type(v)==OrderedDict and v.get('type'):
+            if not v.get('args') :
+                v['args']=getattr(settings,v.get('type')+'_args')
 
 def _get_opt_name(flags):
     for flg in flags:
